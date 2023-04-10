@@ -115,6 +115,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarProjectMenu,
+	title: {
+		value: 'Project',
+		original: 'Project',
+		mnemonicTitle: localize({ key: 'mProject', comment: ['&& denotes a mnemonic'] }, "&&Project")
+	},
+	order: 9
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarBuildMenu,
+	title: {
+		value: 'Build',
+		original: 'Build',
+		mnemonicTitle: localize({ key: 'mBuild', comment: ['&& denotes a mnemonic'] }, "&&Build")
+	},
+	order: 10
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarPreferencesMenu,
 	title: {
 		value: 'Preferences',
@@ -122,7 +142,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		mnemonicTitle: localize({ key: 'mPreferences', comment: ['&& denotes a mnemonic'] }, "Preferences")
 	},
 	when: IsMacNativeContext,
-	order: 9
+	order: 11
 });
 
 export abstract class MenubarControl extends Disposable {

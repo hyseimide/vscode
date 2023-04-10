@@ -23,6 +23,112 @@ import { INativeHostService } from 'vs/platform/native/common/native';
 import { IProgressService, ProgressLocation } from 'vs/platform/progress/common/progress';
 import { IssueType } from 'vs/platform/issue/common/issue';
 
+//Build
+
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '1_build',
+	command: {
+		id: 'cmake.clean',
+		title: localize({ key: 'miCleanUp', comment: ['&& denotes a mnemonic'] }, "Clean &&Up")
+	},
+	order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '2_build',
+	command: {
+		id: 'cmake.build',
+		title: localize({ key: 'miBuild', comment: ['&& denotes a mnemonic'] }, "&&Build"),
+	},
+	order: 2
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '3_build',
+	command: {
+		id: 'cmake.run',
+		title: localize({ key: 'miRun', comment: ['&& denotes a mnemonic'] }, "&&Run")
+	},
+	order: 3
+});
+
+//Project
+
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '1_Hello',
+	command: {
+		id: 'extension.helloWorld',
+		title: localize({ key: 'miHello', comment: ['&& denotes a mnemonic'] }, "&&Hello")
+	},
+	order: 2
+});
+
+
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '1_flash',
+	command: {
+		id: 'workbench.action.flash',
+		title: localize({ key: 'miFlashEditor', comment: ['&& denotes a mnemonic'] }, "Flash &&Editor")
+	},
+	order: 2
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '1_openocd',
+	title: localize({ key: 'miOpenOCD', comment: ['&& denotes a mnemonic'] }, "&&OpenOCD"),
+	submenu: MenuId.MenubarOpenOCDMenu,
+	order: 3
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
+	group: '1_openocd',
+	command: {
+		id: 'workbench.action.openocd.start',
+		title: localize({ key: 'miStartOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Start &&Openocd Server")
+	},
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
+	group: '2_openocd',
+	command: {
+		id: 'workbench.action.openocd.restart',
+		title: localize({ key: 'miRestartOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Restart &&Openocd Server")
+	},
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
+	group: '3_openocd',
+	command: {
+		id: 'workbench.action.openocd.stop',
+		title: localize({ key: 'miStopOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Stop &&Openocd Server")
+	},
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '1_hardware',
+	title: localize({ key: 'mihardware configuration', comment: ['&& denotes a mnemonic'] }, "Hardware &&Configuration"),
+	submenu: MenuId.MenubarHardwareMenu,
+	order: 3
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
+	group: '1_pin',
+	command: {
+		id: 'workbench.action.hardware.pin',
+		title: localize({ key: 'mipin configuration', comment: ['&& denotes a mnemonic'] }, "Pin &&Configuration")
+	},
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
+	group: '2_motor',
+	command: {
+		id: 'workbench.action.hardware.motor',
+		title: localize({ key: 'mimotor configuration', comment: ['&& denotes a mnemonic'] }, "Motor &&Configuration")
+	},
+	order: 1
+});
 //#region Issue Contribution
 
 registerSingleton(IWorkbenchIssueService, NativeIssueService, InstantiationType.Delayed);

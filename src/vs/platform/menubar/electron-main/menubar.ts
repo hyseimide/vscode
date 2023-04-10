@@ -357,6 +357,22 @@ export class Menubar {
 			menubar.append(helpMenuItem);
 		}
 
+		// Project
+		if (this.shouldDrawMenu('Project')) {
+			const projectMenu = new Menu();
+			const projectMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mProject', comment: ['&& denotes a mnemonic'] }, "&&Project")), submenu: projectMenu });
+			this.setMenuById(projectMenu, 'Project');
+			menubar.append(projectMenuItem);
+		}
+
+		// Build
+		if (this.shouldDrawMenu('Build')) {
+			const buildMenu = new Menu();
+			const buildMenuItem = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'mBuild', comment: ['&& denotes a mnemonic'] }, "&&Build")), submenu: buildMenu });
+			this.setMenuById(buildMenu, 'Build');
+			menubar.append(buildMenuItem);
+		}
+
 		if (menubar.items && menubar.items.length > 0) {
 			Menu.setApplicationMenu(menubar);
 		} else {
