@@ -64,15 +64,15 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 2
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarSelectionMenu,
-	title: {
-		value: 'Selection',
-		original: 'Selection',
-		mnemonicTitle: localize({ key: 'mSelection', comment: ['&& denotes a mnemonic'] }, "&&Selection")
-	},
-	order: 3
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+// 	submenu: MenuId.MenubarSelectionMenu,
+// 	title: {
+// 		value: 'Selection',
+// 		original: 'Selection',
+// 		mnemonicTitle: localize({ key: 'mSelection', comment: ['&& denotes a mnemonic'] }, "&&Selection")
+// 	},
+// 	order: 3
+// });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarViewMenu,
@@ -81,7 +81,27 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'View',
 		mnemonicTitle: localize({ key: 'mView', comment: ['&& denotes a mnemonic'] }, "&&View")
 	},
+	order: 3
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarProjectMenu,
+	title: {
+		value: 'Project',
+		original: 'Project',
+		mnemonicTitle: localize({ key: 'mProject', comment: ['&& denotes a mnemonic'] }, "&&Project")
+	},
 	order: 4
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarBuildMenu,
+	title: {
+		value: 'Build',
+		original: 'Build',
+		mnemonicTitle: localize({ key: 'mBuild', comment: ['&& denotes a mnemonic'] }, "&&Build")
+	},
+	order: 5
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -91,7 +111,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'Go',
 		mnemonicTitle: localize({ key: 'mGoto', comment: ['&& denotes a mnemonic'] }, "&&Go")
 	},
-	order: 5
+	order: 6
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -115,26 +135,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarProjectMenu,
-	title: {
-		value: 'Project',
-		original: 'Project',
-		mnemonicTitle: localize({ key: 'mProject', comment: ['&& denotes a mnemonic'] }, "&&Project")
-	},
-	order: 9
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarBuildMenu,
-	title: {
-		value: 'Build',
-		original: 'Build',
-		mnemonicTitle: localize({ key: 'mBuild', comment: ['&& denotes a mnemonic'] }, "&&Build")
-	},
-	order: 10
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarPreferencesMenu,
 	title: {
 		value: 'Preferences',
@@ -142,7 +142,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		mnemonicTitle: localize({ key: 'mPreferences', comment: ['&& denotes a mnemonic'] }, "Preferences")
 	},
 	when: IsMacNativeContext,
-	order: 11
+	order: 9
 });
 
 export abstract class MenubarControl extends Disposable {

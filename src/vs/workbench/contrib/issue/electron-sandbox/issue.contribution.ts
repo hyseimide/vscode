@@ -34,7 +34,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
 	order: 1
 });
 MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
-	group: '2_build',
+	group: '1_build',
 	command: {
 		id: 'cmake.build',
 		title: localize({ key: 'miBuild', comment: ['&& denotes a mnemonic'] }, "&&Build"),
@@ -42,30 +42,55 @@ MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
 	order: 2
 });
 MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
-	group: '3_build',
+	group: '1_run',
 	command: {
-		id: 'cmake.run',
+		id: 'hyseim.runAction',
 		title: localize({ key: 'miRun', comment: ['&& denotes a mnemonic'] }, "&&Run")
+	},
+	order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '2_run',
+	command: {
+		id: 'hyseim.buildAndRun',
+		title: localize({ key: 'miBuildAndRun', comment: ['&& denotes a mnemonic'] }, "Build and &&Run")
+	},
+	order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '2_run',
+	command: {
+		id: 'hyseim.buildAndDebug',
+		title: localize({ key: 'miBuildAndDebug', comment: ['&& denotes a mnemonic'] }, "Build and &&Debug")
+	},
+	order: 2
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
+	group: '2_run',
+	command: {
+		id: 'hyseim.buildAndFlash',
+		title: localize({ key: 'miBuildAndFlash', comment: ['&& denotes a mnemonic'] }, "Build and &&Flash")
 	},
 	order: 3
 });
 
+
 //Project
 
-MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
-	group: '1_Hello',
-	command: {
-		id: 'extension.helloWorld',
-		title: localize({ key: 'miHello', comment: ['&& denotes a mnemonic'] }, "&&Hello")
-	},
-	order: 2
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+// 	group: '1_Hello',
+// 	command: {
+// 		id: 'extension.helloWorld',
+// 		title: localize({ key: 'miHello', comment: ['&& denotes a mnemonic'] }, "&&Hello")
+// 	},
+// 	order: 2
+// });
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 	group: '1_flash',
 	command: {
-		id: 'workbench.action.flash',
+		id: 'hyseim.flashManagerEditor.show',
 		title: localize({ key: 'miFlashEditor', comment: ['&& denotes a mnemonic'] }, "Flash &&Editor")
 	},
 	order: 2
@@ -115,7 +140,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 	group: '1_pin',
 	command: {
-		id: 'workbench.action.hardware.pin',
+		id: 'hyseim.pinoutEditor.show',
 		title: localize({ key: 'mipin configuration', comment: ['&& denotes a mnemonic'] }, "Pin &&Configuration")
 	},
 	order: 1
@@ -124,7 +149,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 	group: '2_motor',
 	command: {
-		id: 'workbench.action.hardware.motor',
+		id: 'hyseim.motorProfile.show',
 		title: localize({ key: 'mimotor configuration', comment: ['&& denotes a mnemonic'] }, "Motor &&Configuration")
 	},
 	order: 1

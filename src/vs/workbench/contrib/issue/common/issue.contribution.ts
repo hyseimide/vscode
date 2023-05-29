@@ -99,13 +99,13 @@ export class BaseIssueContribution implements IWorkbenchContribution {
 
 		MenuRegistry.appendMenuItem(MenuId.CommandPalette, { command: reportIssue });
 
-		MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
-			group: '3_feedback',
-			command: {
-				id: OpenIssueReporterActionId,
-				title: localize({ key: 'miReportIssue', comment: ['&& denotes a mnemonic', 'Translate this to "Report Issue in English" in all languages please!'] }, "Report &&Issue")
-			},
-			order: 3
-		});
+		// MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+		// 	group: '3_feedback',
+		// 	command: {
+		// 		id: OpenIssueReporterActionId,
+		// 		title: localize({ key: 'miReportIssue', comment: ['&& denotes a mnemonic', 'Translate this to "Report Issue in English" in all languages please!'] }, "Report &&Issue")
+		// 	},
+		// 	order: 3
+		// });
 	}
 }
