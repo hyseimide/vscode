@@ -86,6 +86,14 @@ MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
 // 	order: 2
 // });
 
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '1_flash',
+	command: {
+		id: 'hyseim.projectSetting',
+		title: localize({ key: 'miProjectSetting', comment: ['&& denotes a mnemonic'] }, "Project &&Setting")
+	},
+	order: 1
+});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 	group: '1_flash',
