@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Dimension } from 'vs/base/browser/dom';
+import { IDimension } from 'vs/base/browser/dom';
 import { Orientation } from 'vs/base/browser/ui/splitview/splitview';
 import { Color } from 'vs/base/common/color';
 import { Event } from 'vs/base/common/event';
@@ -12,6 +12,7 @@ import { URI } from 'vs/base/common/uri';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IKeyMods } from 'vs/platform/quickinput/common/quickInput';
 import { IMarkProperties, ITerminalCapabilityStore, ITerminalCommand } from 'vs/platform/terminal/common/capabilities/capabilities';
+import { IMergedEnvironmentVariableCollection } from 'vs/platform/terminal/common/environmentVariable';
 import { IExtensionTerminalProfile, IReconnectionProperties, IShellIntegration, IShellLaunchConfig, ITerminalDimensions, ITerminalLaunchError, ITerminalProfile, ITerminalTabLayoutInfoById, TerminalExitReason, TerminalIcon, TerminalLocation, TerminalShellType, TerminalType, TitleEventSource, WaitOnExitValue } from 'vs/platform/terminal/common/terminal';
 import { IColorTheme } from 'vs/platform/theme/common/themeService';
 import { IWorkspaceFolder } from 'vs/platform/workspace/common/workspace';
@@ -19,16 +20,26 @@ import { EditorInput } from 'vs/workbench/common/editor/editorInput';
 import { IEditableData } from 'vs/workbench/common/views';
 import { ITerminalStatusList } from 'vs/workbench/contrib/terminal/browser/terminalStatusList';
 import { ScrollPosition } from 'vs/workbench/contrib/terminal/browser/xterm/markNavigationAddon';
-import { ITerminalQuickFixAddon } from 'vs/workbench/contrib/terminal/browser/xterm/quickFixAddon';
+import { XtermTerminal } from 'vs/workbench/contrib/terminal/browser/xterm/xtermTerminal';
 import { IRegisterContributedProfileArgs, IRemoteTerminalAttachTarget, IStartExtensionTerminalRequest, ITerminalBackend, ITerminalConfigHelper, ITerminalFont, ITerminalProcessExtHostProxy } from 'vs/workbench/contrib/terminal/common/terminal';
 import { EditorGroupColumn } from 'vs/workbench/services/editor/common/editorGroupColumn';
 import { ISimpleSelectedSuggestion } from 'vs/workbench/services/suggest/browser/simpleSuggestWidget';
-import { IMarker } from 'xterm';
+import { IMarker, Terminal as RawXtermTerminal } from 'xterm';
 
 export const ITerminalService = createDecorator<ITerminalService>('terminalService');
 export const ITerminalEditorService = createDecorator<ITerminalEditorService>('terminalEditorService');
 export const ITerminalGroupService = createDecorator<ITerminalGroupService>('terminalGroupService');
 export const ITerminalInstanceService = createDecorator<ITerminalInstanceService>('terminalInstanceService');
+
+/**
+ * A terminal contribution that gets created whenever a terminal is created. A contribution has
+ * access to the process manager through the constructor and provides a method for when xterm.js has
+ * been initialized.
+ */
+export interface ITerminalContribution extends IDisposable {
+	layout?(xterm: IXtermTerminal & { raw: RawXtermTerminal }, dimension: IDimension): void;
+	xtermReady?(xterm: IXtermTerminal & { raw: RawXtermTerminal }): void;
+}
 
 /**
  * A service used to create instances or fetch backends, this services allows services that
@@ -56,10 +67,8 @@ export interface ITerminalInstanceService {
 	 * Create a new terminal instance.
 	 * @param launchConfig The shell launch config.
 	 * @param target The target of the terminal.
-	 * @param resource The URI for the terminal. Note that this is the unique identifier for the
-	 * terminal, not the cwd.
 	 */
-	createInstance(launchConfig: IShellLaunchConfig, target: TerminalLocation, resource?: URI): ITerminalInstance;
+	createInstance(launchConfig: IShellLaunchConfig, target: TerminalLocation): ITerminalInstance;
 
 	/**
 	 * Gets the registered backend for a remote authority (undefined = local). This is a convenience
@@ -67,6 +76,8 @@ export interface ITerminalInstanceService {
 	 * @param remoteAuthority The remote authority of the backend.
 	 */
 	getBackend(remoteAuthority?: string): Promise<ITerminalBackend | undefined>;
+
+	didRegisterBackend(remoteAuthority?: string): void;
 }
 
 export interface IBrowserTerminalConfigHelper extends ITerminalConfigHelper {
@@ -171,17 +182,11 @@ export interface ITerminalService extends ITerminalInstanceHost {
 	 */
 	getReconnectedTerminals(reconnectionOwner: string): ITerminalInstance[] | undefined;
 
-	getActiveOrCreateInstance(): Promise<ITerminalInstance>;
+	getActiveOrCreateInstance(options?: { acceptsInput?: boolean }): Promise<ITerminalInstance>;
+	revealActiveTerminal(): Promise<void>;
 	moveToEditor(source: ITerminalInstance): void;
-	moveToTerminalView(source?: ITerminalInstance | URI): Promise<void>;
+	moveToTerminalView(source: ITerminalInstance | URI): Promise<void>;
 	getPrimaryBackend(): ITerminalBackend | undefined;
-
-	/**
-	 * Perform an action with the active terminal instance, if the terminal does
-	 * not exist the callback will not be called.
-	 * @param callback The callback that fires with the active terminal
-	 */
-	doWithActiveInstance<T>(callback: (terminal: ITerminalInstance) => T): T | void;
 
 	/**
 	 * Fire the onActiveTabChanged event, this will trigger the terminal dropdown to be updated,
@@ -190,14 +195,6 @@ export interface ITerminalService extends ITerminalInstanceHost {
 	refreshActiveGroup(): void;
 
 	registerProcessSupport(isSupported: boolean): void;
-
-	/**
-	 * Registers a link provider that enables integrators to add links to the terminal.
-	 * @param linkProvider When registered, the link provider is asked whenever a cell is hovered
-	 * for links at that position. This lets the terminal know all links at a given area and also
-	 * labels for what these links are going to do.
-	 */
-	registerLinkProvider(linkProvider: ITerminalExternalLinkProvider): IDisposable;
 
 	showProfileQuickPick(type: 'setDefault' | 'createInstance', cwd?: string | URI): Promise<ITerminalInstance | undefined>;
 
@@ -215,7 +212,6 @@ export interface ITerminalService extends ITerminalInstanceHost {
 
 	resolveLocation(location?: ITerminalLocationOptions): TerminalLocation | undefined;
 	setNativeDelegate(nativeCalls: ITerminalServiceNativeDelegate): void;
-	handleNewRegisteredBackend(backend: ITerminalBackend): void;
 	toggleEscapeSequenceLogging(): Promise<void>;
 
 	getEditingTerminal(): ITerminalInstance | undefined;
@@ -241,11 +237,10 @@ export interface ITerminalEditorService extends ITerminalInstanceHost {
 	readonly instances: readonly ITerminalInstance[];
 
 	openEditor(instance: ITerminalInstance, editorOptions?: TerminalEditorLocation): Promise<void>;
-	detachActiveEditorInstance(): ITerminalInstance;
 	detachInstance(instance: ITerminalInstance): void;
 	splitInstance(instanceToSplit: ITerminalInstance, shellLaunchConfig?: IShellLaunchConfig): ITerminalInstance;
 	revealActiveEditor(preserveFocus?: boolean): Promise<void>;
-	resolveResource(instance: ITerminalInstance | URI): URI;
+	resolveResource(instance: ITerminalInstance): URI;
 	reviveInput(deserializedInput: IDeserializedTerminalEditorInput): EditorInput;
 	getInputFromResource(resource: URI): EditorInput;
 }
@@ -265,14 +260,13 @@ interface ITerminalEditorInputObject {
 	readonly isFeatureTerminal?: boolean;
 	readonly hideFromUser?: boolean;
 	readonly reconnectionProperties?: IReconnectionProperties;
+	readonly shellIntegrationNonce: string;
 }
 
 export interface ISerializedTerminalEditorInput extends ITerminalEditorInputObject {
-	readonly resource: string;
 }
 
 export interface IDeserializedTerminalEditorInput extends ITerminalEditorInputObject {
-	readonly resource: URI;
 }
 
 export type ITerminalLocationOptions = TerminalLocation | TerminalEditorLocation | { parentTerminal: ITerminalInstance } | { splitActiveTerminal: boolean };
@@ -354,6 +348,7 @@ export interface ITerminalGroupService extends ITerminalInstanceHost {
 	showPanel(focus?: boolean): Promise<void>;
 	hidePanel(): void;
 	focusTabs(): void;
+	focusHover(): void;
 	showTabs(): void;
 	updateVisibility(): void;
 }
@@ -439,7 +434,7 @@ export interface ITerminalInstance {
 	readonly maxRows: number;
 	readonly fixedCols?: number;
 	readonly fixedRows?: number;
-	readonly container?: HTMLElement;
+	readonly domElement: HTMLElement;
 	readonly icon?: TerminalIcon;
 	readonly color?: string;
 	readonly reconnectionProperties?: IReconnectionProperties;
@@ -452,10 +447,10 @@ export interface ITerminalInstance {
 	readonly os?: OperatingSystem;
 	readonly capabilities: ITerminalCapabilityStore;
 	readonly usedShellIntegrationInjection: boolean;
+	readonly injectedArgs: string[] | undefined;
+	readonly extEnvironmentVariableCollection: IMergedEnvironmentVariableCollection | undefined;
 
 	readonly statusList: ITerminalStatusList;
-
-	quickFix: ITerminalQuickFixAddon | undefined;
 
 	/**
 	 * The process ID of the shell process, this is undefined when there is no process associated
@@ -467,11 +462,6 @@ export interface ITerminalInstance {
 	 * The position of the terminal.
 	 */
 	target?: TerminalLocation;
-
-	/**
-	 * Whether or not shell integration telemetry / warnings should be reported for this terminal.
-	 */
-	disableShellIntegrationReporting: boolean;
 
 	/**
 	 * The id of a persistent process. This is defined if this is a terminal created by a pty host
@@ -526,13 +516,13 @@ export interface ITerminalInstance {
 	onDisposed: Event<ITerminalInstance>;
 
 	onProcessIdReady: Event<ITerminalInstance>;
-	onLinksReady: Event<ITerminalInstance>;
 	onRequestExtHostProcess: Event<ITerminalInstance>;
 	onDimensionsChanged: Event<void>;
 	onMaximumDimensionsChanged: Event<void>;
 	onDidChangeHasChildProcesses: Event<boolean>;
 
 	onDidFocus: Event<ITerminalInstance>;
+	onDidRequestFocus: Event<void>;
 	onDidBlur: Event<ITerminalInstance>;
 	onDidInputData: Event<ITerminalInstance>;
 
@@ -585,15 +575,9 @@ export interface ITerminalInstance {
 	readonly exitReason: TerminalExitReason | undefined;
 
 	/**
-	 * Whether links in the terminal are ready, links aren't available until after the process is
-	 * ready.
-	 */
-	readonly areLinksReady: boolean;
-
-	/**
 	 * The xterm.js instance for this terminal.
 	 */
-	readonly xterm?: IXtermTerminal;
+	readonly xterm?: XtermTerminal;
 
 	/**
 	 * Returns an array of data events that have fired within the first 10 seconds. If this is
@@ -659,9 +643,9 @@ export interface ITerminalInstance {
 	userHome: string | undefined;
 
 	/**
-	 * Shows the environment information hover if the widget exists.
+	 * The nonce used to verify commands coming from shell integration.
 	 */
-	showEnvironmentInfoHover(): void;
+	shellIntegrationNonce: string;
 
 	/**
 	 * Registers and returns a marker
@@ -883,11 +867,6 @@ export interface ITerminalInstance {
 	getCwd(): Promise<string>;
 
 	/**
-	 * @throws when called before xterm.js is ready.
-	 */
-	registerLinkProvider(provider: ITerminalExternalLinkProvider): IDisposable;
-
-	/**
 	 * Sets the title of the terminal to the provided string. If no title is provided, it will reset
 	 * to the terminal's title if it was not explicitly set by the user or API.
 	 * @param title The new title.
@@ -905,22 +884,10 @@ export interface ITerminalInstance {
 	changeColor(): Promise<void>;
 
 	/**
-	 * Triggers a quick pick that displays links from the viewport of the active terminal.
-	 * Selecting a file or web link will open it. Selecting a word link will copy it to the
-	 * clipboard.
-	 */
-	showLinkQuickpick(): Promise<void>;
-
-	/**
 	 * Triggers a quick pick that displays recent commands or cwds. Selecting one will
 	 * rerun it in the active terminal.
 	 */
 	runRecent(type: 'command' | 'cwd'): Promise<void>;
-
-	/**
-	 * Activates the most recent link of the given type.
-	 */
-	openRecentLink(type: 'localFile' | 'url'): Promise<void>;
 
 	/**
 	 * Attempts to detect and kill the process listening on specified port.
@@ -970,17 +937,13 @@ export interface ITerminalInstance {
 	resetScrollbarVisibility(): void;
 
 	/**
-	 * Register a child element to the terminal instance's container.
+	 * Gets a terminal contribution by its ID.
 	 */
-	registerChildElement(element: ITerminalChildElement): IDisposable;
+	getContribution<T extends ITerminalContribution>(id: string): T | null;
 }
 
-// NOTE: This interface is very similar to the widget manager internal to TerminalInstance, in the
-// future these should probably be consolidated.
-export interface ITerminalChildElement {
-	element: HTMLElement;
-	layout?(dimension: Dimension): void;
-	xtermReady?(xterm: IXtermTerminal): void;
+export const enum XtermTerminalConstants {
+	SearchHighlightLimit = 1000
 }
 
 export interface IXtermTerminal {
@@ -996,7 +959,7 @@ export interface IXtermTerminal {
 	readonly shellIntegration: IShellIntegration;
 
 	readonly onDidChangeSelection: Event<void>;
-	readonly onDidChangeFindResults: Event<{ resultIndex: number; resultCount: number } | undefined>;
+	readonly onDidChangeFindResults: Event<{ resultIndex: number; resultCount: number }>;
 
 	/**
 	 * Gets a view of the current texture atlas used by the renderers.
@@ -1057,11 +1020,6 @@ export interface IXtermTerminal {
 	 * Returns a reverse iterator of buffer lines as strings
 	 */
 	getBufferReverseIterator(): IterableIterator<string>;
-
-	/**
-	 * Focuses the accessible buffer, updating its contents
-	 */
-	focusAccessibleBuffer(): Promise<void>;
 
 	/**
 	 * Refreshes the terminal after it has been moved.

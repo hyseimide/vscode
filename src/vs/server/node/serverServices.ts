@@ -38,7 +38,7 @@ import { InstantiationService } from 'vs/platform/instantiation/common/instantia
 import { ServiceCollection } from 'vs/platform/instantiation/common/serviceCollection';
 import { ILanguagePackService } from 'vs/platform/languagePacks/common/languagePacks';
 import { NativeLanguagePackService } from 'vs/platform/languagePacks/node/languagePacks';
-import { AbstractLogger, DEFAULT_LOG_LEVEL, getLogLevel, ILoggerService, ILogService, LogLevel } from 'vs/platform/log/common/log';
+import { AbstractLogger, DEFAULT_LOG_LEVEL, getLogLevel, ILoggerService, ILogService, log, LogLevel, LogLevelToString } from 'vs/platform/log/common/log';
 import product from 'vs/platform/product/common/product';
 import { IProductService } from 'vs/platform/product/common/productService';
 import { RemoteAgentConnectionContext } from 'vs/platform/remote/common/remoteAgentEnvironment';
@@ -80,6 +80,7 @@ import { localize } from 'vs/nls';
 import { RemoteExtensionsScannerChannel, RemoteExtensionsScannerService } from 'vs/server/node/remoteExtensionsScanner';
 import { RemoteExtensionsScannerChannelName } from 'vs/platform/remote/common/remoteExtensionsScanner';
 import { RemoteUserDataProfilesServiceChannel } from 'vs/platform/userDataProfile/common/userDataProfileIpc';
+import { NodePtyHostStarter } from 'vs/platform/terminal/node/nodePtyHostStarter';
 
 const eventPrefix = 'monacoworkbench';
 
@@ -102,6 +103,7 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 	const logService = new LogService(logger, [new ServerLogger(getLogLevel(environmentService))]);
 	services.set(ILogService, logService);
 	setTimeout(() => cleanupOlderLogs(environmentService.logsHome.fsPath).then(null, err => logService.error(err)), 10000);
+	logService.onDidChangeLogLevel(logLevel => log(logService, logLevel, `Log level changed to ${LogLevelToString(logService.getLevel())}`));
 
 	logService.trace(`Remote configuration data at ${REMOTE_DATA_FOLDER}`);
 	logService.trace('process arguments:', environmentService.args);
@@ -137,7 +139,7 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 	const [, , machineId] = await Promise.all([
 		configurationService.initialize(),
 		userDataProfilesService.init(),
-		getMachineId()
+		getMachineId(logService.error.bind(logService))
 	]);
 
 	const extensionHostStatusService = new ExtensionHostStatusService();
@@ -156,7 +158,7 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 
 		const config: ITelemetryServiceConfig = {
 			appenders: [oneDsAppender],
-			commonProperties: resolveCommonProperties(fileService, release(), hostname(), process.arch, productService.commit, productService.version + '-remote', machineId, isInternal, environmentService.installSourcePath, 'remoteAgent'),
+			commonProperties: resolveCommonProperties(release(), hostname(), process.arch, productService.commit, productService.version + '-remote', machineId, isInternal, 'remoteAgent'),
 			piiPaths: getPiiPathsFromEnvironment(environmentService)
 		};
 		const initialTelemetryLevelArg = environmentService.args['telemetry-level'];
@@ -189,15 +191,15 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 	const instantiationService: IInstantiationService = new InstantiationService(services);
 	services.set(ILanguagePackService, instantiationService.createInstance(NativeLanguagePackService));
 
-	const ptyService = instantiationService.createInstance(
-		PtyHostService,
+	const ptyHostStarter = instantiationService.createInstance(
+		NodePtyHostStarter,
 		{
 			graceTime: ProtocolConstants.ReconnectionGraceTime,
 			shortGraceTime: ProtocolConstants.ReconnectionShortGraceTime,
 			scrollback: configurationService.getValue<number>(TerminalSettingId.PersistentSessionScrollback) ?? 100
-		},
-		true
+		}
 	);
+	const ptyService = instantiationService.createInstance(PtyHostService, ptyHostStarter);
 	services.set(IPtyService, ptyService);
 
 	services.set(IEncryptionMainService, new SyncDescriptor(EncryptionMainService, [machineId]));
@@ -217,7 +219,7 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 
 		socketServer.registerChannel(REMOTE_TERMINAL_CHANNEL_NAME, new RemoteTerminalChannel(environmentService, logService, ptyService, productService, extensionManagementService, configurationService));
 
-		const remoteExtensionsScanner = new RemoteExtensionsScannerService(instantiationService.createInstance(ExtensionManagementCLI), environmentService, userDataProfilesService, extensionsScannerService, logService, extensionGalleryService, languagePackService);
+		const remoteExtensionsScanner = new RemoteExtensionsScannerService(instantiationService.createInstance(ExtensionManagementCLI, logService), environmentService, userDataProfilesService, extensionsScannerService, logService, extensionGalleryService, languagePackService);
 		socketServer.registerChannel(RemoteExtensionsScannerChannelName, new RemoteExtensionsScannerChannel(remoteExtensionsScanner, (ctx: RemoteAgentConnectionContext) => getUriTransformer(ctx.remoteAuthority)));
 
 		const remoteFileSystemChannel = new RemoteAgentFileSystemProviderChannel(logService, environmentService);
@@ -235,7 +237,7 @@ export async function setupServerServices(connectionToken: ServerConnectionToken
 		socketServer.registerChannel('credentials', credentialsChannel);
 
 		// clean up extensions folder
-		extensionManagementService.cleanUp();
+		remoteExtensionsScanner.whenExtensionsReady().then(() => extensionManagementService.cleanUp());
 
 		disposables.add(new ErrorTelemetry(accessor.get(ITelemetryService)));
 

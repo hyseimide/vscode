@@ -5,11 +5,8 @@
 
 import { localize } from 'vs/nls';
 import { MenuRegistry, MenuId, registerAction2, Action2 } from 'vs/platform/actions/common/actions';
-import { InstantiationType, registerSingleton } from 'vs/platform/instantiation/common/extensions';
 import { IWorkbenchIssueService } from 'vs/workbench/services/issue/common/issue';
-import { NativeIssueService } from 'vs/workbench/services/issue/electron-sandbox/issueService';
 import { CommandsRegistry } from 'vs/platform/commands/common/commands';
-import { IIssueService } from 'vs/platform/issue/electron-sandbox/issue';
 import { BaseIssueContribution } from 'vs/workbench/contrib/issue/common/issue.contribution';
 import { IProductService } from 'vs/platform/product/common/productService';
 import { Registry } from 'vs/platform/registry/common/platform';
@@ -21,7 +18,7 @@ import { INativeEnvironmentService } from 'vs/platform/environment/common/enviro
 import { IDialogService } from 'vs/platform/dialogs/common/dialogs';
 import { INativeHostService } from 'vs/platform/native/common/native';
 import { IProgressService, ProgressLocation } from 'vs/platform/progress/common/progress';
-import { IssueType } from 'vs/platform/issue/common/issue';
+import { IIssueMainService, IssueType } from 'vs/platform/issue/common/issue';
 
 //Build
 
@@ -164,8 +161,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 });
 //#region Issue Contribution
 
-registerSingleton(IWorkbenchIssueService, NativeIssueService, InstantiationType.Delayed);
-
 class NativeIssueContribution extends BaseIssueContribution {
 
 	constructor(
@@ -247,7 +242,7 @@ class StopTracing extends Action2 {
 	}
 
 	override async run(accessor: ServicesAccessor): Promise<void> {
-		const issueService = accessor.get(IIssueService);
+		const issueService = accessor.get(IIssueMainService);
 		const environmentService = accessor.get(INativeEnvironmentService);
 		const dialogService = accessor.get(IDialogService);
 		const nativeHostService = accessor.get(INativeHostService);
@@ -275,7 +270,7 @@ class StopTracing extends Action2 {
 registerAction2(StopTracing);
 
 CommandsRegistry.registerCommand('_issues.getSystemStatus', (accessor) => {
-	return accessor.get(IIssueService).getSystemStatus();
+	return accessor.get(IIssueMainService).getSystemStatus();
 });
 
 //#endregion
