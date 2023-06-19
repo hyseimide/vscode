@@ -74,19 +74,10 @@ MenuRegistry.appendMenuItem(MenuId.MenubarBuildMenu, {
 
 //Project
 
-// MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
-// 	group: '1_Hello',
-// 	command: {
-// 		id: 'extension.helloWorld',
-// 		title: localize({ key: 'miHello', comment: ['&& denotes a mnemonic'] }, "&&Hello")
-// 	},
-// 	order: 2
-// });
-
 MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 	group: '1_flash',
 	command: {
-		id: 'hyseim.projectSetting',
+		id: 'hyseim.build.show',
 		title: localize({ key: 'miProjectSetting', comment: ['&& denotes a mnemonic'] }, "Project &&Setting")
 	},
 	order: 1
@@ -111,26 +102,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
 	group: '1_openocd',
 	command: {
-		id: 'workbench.action.openocd.start',
-		title: localize({ key: 'miStartOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Start &&Openocd Server")
+		id: 'hyseim.startOpenOCD',
+		title: localize({ key: 'miStartOpenOCDServer', comment: ['&& denotes a mnemonic'] }, "Start &&OpenOCD Server")
 	},
 	order: 1
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
-	group: '2_openocd',
-	command: {
-		id: 'workbench.action.openocd.restart',
-		title: localize({ key: 'miRestartOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Restart &&Openocd Server")
-	},
-	order: 1
-});
+// MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
+// 	group: '2_openocd',
+// 	command: {
+// 		id: 'workbench.action.openocd.restart',
+// 		title: localize({ key: 'miRestartOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Restart &&Openocd Server")
+// 	},
+// 	order: 1
+// });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOpenOCDMenu, {
 	group: '3_openocd',
 	command: {
-		id: 'workbench.action.openocd.stop',
-		title: localize({ key: 'miStopOpenocdServer', comment: ['&& denotes a mnemonic'] }, "Stop &&Openocd Server")
+		id: 'hyseim.stopOpenOCD',
+		title: localize({ key: 'miStopOpenOCDServer', comment: ['&& denotes a mnemonic'] }, "Stop &&OpenOCD Server")
 	},
 	order: 1
 });
@@ -154,7 +145,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 	group: '2_motor',
 	command: {
-		id: 'hyseim.motorProfile.show',
+		id: 'hyseim.motor.show',
 		title: localize({ key: 'mimotor configuration', comment: ['&& denotes a mnemonic'] }, "Motor &&Configuration")
 	},
 	order: 1
