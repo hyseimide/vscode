@@ -88,6 +88,7 @@ export class MenuId {
 	static readonly MenubarBuildMenu = new MenuId('MenubarBuildMenu');
 	static readonly MenubarOpenOCDMenu = new MenuId('MenubarOpenOCDMenu');
 	static readonly MenubarHardwareMenu = new MenuId('MenubarHardwareMenu');
+	static readonly MenubarDriverMenu = new MenuId('MenubarDriverMenu');
 	static readonly MenubarLayoutMenu = new MenuId('MenubarLayoutMenu');
 	static readonly MenubarNewBreakpointMenu = new MenuId('MenubarNewBreakpointMenu');
 	static readonly PanelAlignmentMenu = new MenuId('PanelAlignmentMenu');

@@ -130,7 +130,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
 	group: '1_hardware',
 	title: localize({ key: 'mihardware configuration', comment: ['&& denotes a mnemonic'] }, "Hardware &&Configuration"),
 	submenu: MenuId.MenubarHardwareMenu,
-	order: 3
+	order: 4
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
@@ -150,6 +150,32 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHardwareMenu, {
 	},
 	order: 1
 });
+
+MenuRegistry.appendMenuItem(MenuId.MenubarProjectMenu, {
+	group: '2_driver',
+	title: localize({ key: 'miDriver Installation', comment: ['&& denotes a mnemonic'] }, "Driver &&Installation"),
+	submenu: MenuId.MenubarDriverMenu,
+	order: 5
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarDriverMenu, {
+	group: '1_interface',
+	command: {
+		id: 'hyseim.install.InstallDriver',
+		title: localize({ key: 'milibusb interface driver', comment: ['&& denotes a mnemonic'] }, "Libusb &&Interface Driver")
+	},
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarDriverMenu, {
+	group: '2_libusbK',
+	command: {
+		id: 'hyseim.install.libusbK',
+		title: localize({ key: 'milibusbK-3.1.0-setup', comment: ['&& denotes a mnemonic'] }, "&&LibusbK-3.1.0-Setup")
+	},
+	order: 1
+});
+
 //#region Issue Contribution
 
 class NativeIssueContribution extends BaseIssueContribution {
